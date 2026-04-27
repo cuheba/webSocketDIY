@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>WebSocket & Redis Test</title>
+  </head>
+  <body style="margin: 0; padding: 0;">
+
+    <div style="display: flex; height: 100vh;">
+
+      <div style="flex: 1; padding: 20px;">
+        <h2>WebSocket Echo Client</h2>
+        <input id="msgInput" type="text" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+        <ul id="messages"></ul>
+      </div>
+
+      <div style="flex: 1; padding: 20px; border-left: 1px solid black;">
+        <h2>History (Redis)</h2>
+        <button onclick="getHistory()">Запросить историю</button>
+        <pre id="historyDisplay" style="white-space: pre-wrap; background: #f4f4f4; padding: 10px; margin-top: 10px; min-height: 50px;"></pre>
+      </div>
+
+    </div>
+
+    <script>
+      // --- Логика WebSocket ---
+      const ws = new WebSocket("ws://localhost:8080/ws");
+
+      ws.onmessage = (event) => {
+        const li = document.createElement("li");
+        li.textContent = "Received: " + event.data;
+        document.getElementById("messages").appendChild(li);
+      };
+
+      function sendMessage() {
+        const input = document.getElementById("msgInput");
+        if (input.value.trim() !== "") {
+          ws.send(input.value);
+          input.value = "";
+        }
+      }
+
+      // --- Логика получения истории ---
+      async function getHistory() {
+        try {
+          const response = await fetch('/history');
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const text = await response.text();
+          document.getElementById("historyDisplay").textContent = text;
+        } catch (error) {
+          document.getElementById("historyDisplay").textContent = "Ошибка загрузки истории: " + error;
+        }
+      }
+    </script>
+  </body>
+</html>
